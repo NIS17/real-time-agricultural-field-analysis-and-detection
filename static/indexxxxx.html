@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agri-AI Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #a8ed9c 0%, #c4f3bb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2.5rem;
+            max-width: 38rem;
+            width: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.35);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(circle at 100% 150%, #f0fdf4 0%, transparent 40%),
+                              radial-gradient(circle at 0% -50%, #dcfce7 0%, transparent 40%);
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .title-gradient {
+            background: linear-gradient(45deg, #16a34a, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .model-choice-label {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #d1d5db;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .model-choice-label:hover {
+            background-color: #ecfdf5;
+            border-color: #10b981;
+            color: #047857;
+        }
+        input[type="radio"]:checked + span {
+            background-color: #10b981;
+            color: white;
+            font-weight: 600;
+            border-color: #059669;
+            box-shadow: 0 6px 12px -2px rgba(16, 185, 129, 0.4);
+        }
+        input[type="radio"] { display: none; }
+
+        input[type="number"]:focus, input[type="text"]:focus {
+             border-color: #10b981;
+             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+             outline: none;
+        }
+
+        button {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        #output {
+            border: 2px dashed #9ca3af;
+            background-color: #f0fdf4;
+            font-size: 1.125rem;
+            font-weight: 600;
+            min-height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+        }
+
+        #webcam-controls {
+            padding-top: 1rem;
+            border-top: 1px dashed #e2e8f0;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="font-bold text-center title-gradient">Agri-AI Suite</h1>
+        <div class="border-b pb-6 mb-6">
+            <label class="font-semibold text-gray-700 block text-center mb-3">Choose a Tool:</label>
+            <div class="flex flex-wrap justify-center gap-3">
+                <label><input type="radio" name="model_choice" value="disease" onclick="toggleUI()" checked><span class="model-choice-label">Plant Disease</span></label>
+                <label><input type="radio" name="model_choice" value="soil" onclick="toggleUI()"><span class="model-choice-label">Soil Type</span></label>
+                <label><input type="radio" name="model_choice" value="moisture" onclick="toggleUI()"><span class="model-choice-label">Soil Moisture</span></label>
+                <label><input type="radio" name="model_choice" value="weed" onclick="toggleUI()"><span class="model-choice-label">Weed Detection</span></label>
+            </div>
+        </div>
+
+        <div id="static_interface">
+            <div id="image_interface">
+                <input type="file" id="fileInput" accept="image/*" class="mb-6 block w-full text-sm text-gray-700 file:mr-4 file:py-3 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"/>
+                <img id="preview" style="max-width: 400px; max-height: 400px; margin: 20px auto; display: none;" class="rounded-lg shadow-md">
+            </div>
+            <div id="moisture_interface" style="display: none;">
+                <p class="text-center text-sm text-gray-600 mb-4">Enter the following sensor and weather data:</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <input type="number" id="month" placeholder="Month (1-12)" class="p-3 border rounded-lg"><input type="number" id="day" placeholder="Day (1-31)" class="p-3 border rounded-lg"><input type="number" id="avg_temp" placeholder="Avg Temp (°C)" step="any" class="p-3 border rounded-lg"><input type="number" id="avg_wind" placeholder="Avg Wind (m/s)" step="any" class="p-3 border rounded-lg"><input type="number" id="avg_ws" placeholder="Avg Wind Speed (km/h)" step="any" class="p-3 border rounded-lg"><input type="number" id="avg_sol_rad" placeholder="Avg Solar Rad" step="any" class="p-3 border rounded-lg"><input type="number" id="s_1_t" placeholder="Sensor 1 Temp" step="any" class="p-3 border rounded-lg"><input type="number" id="s_2_t" placeholder="Sensor 2 Temp" step="any" class="p-3 border rounded-lg"><input type="number" id="s_3_t" placeholder="Sensor 3 Temp" step="any" class="p-3 border rounded-lg"><input type="number" id="s_4_t" placeholder="Sensor 4 Temp" step="any" class="p-3 border rounded-lg">
+                </div>
+            </div>
+            <button onclick="getPrediction()" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl">Get Prediction</button>
+        </div>
+
+        <div id="realtime_interface" style="display:none;">
+             <div id="webcam-controls">
+                <p class="text-sm text-gray-600 mb-2 font-semibold text-center">OR</p>
+                <p class="text-sm text-gray-500 mb-4 text-center">Use Live Camera Feed:</p>
+                <video id="webcam" width="400" height="300" autoplay playsinline style="display:none;"></video>
+                <canvas id="canvas" width="400" height="300" class="rounded-lg shadow-md mx-auto bg-gray-900"></canvas>
+                <div class="mt-4 flex justify-center space-x-4">
+                    <button id="startButton" onclick="startWebcam()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl">Start</button>
+                    <button id="stopButton" onclick="stopWebcam()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-xl" disabled>Stop</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="output" class="mt-6">Waiting for input...</div>
+    </div>
+
+    <script>
+        const imageInterface = document.getElementById('image_interface');
+        const moistureInterface = document.getElementById('moisture_interface');
+        const staticInterface = document.getElementById('static_interface');
+        const realtimeInterface = document.getElementById('realtime_interface');
+        const outputDiv = document.getElementById('output');
+        const previewImg = document.getElementById('preview');
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        let websocket, stream, intervalId;
+
+        function toggleUI() {
+            const selectedModel = document.querySelector('input[name="model_choice"]:checked').value;
+            stopWebcam();
+            if (selectedModel === 'moisture') {
+                staticInterface.style.display = 'block';
+                realtimeInterface.style.display = 'none';
+                moistureInterface.style.display = 'block';
+                imageInterface.style.display = 'none';
+            } else {
+                staticInterface.style.display = 'block';
+                moistureInterface.style.display = 'none';
+                imageInterface.style.display = 'block';
+                realtimeInterface.style.display = 'block';
+            }
+            outputDiv.innerText = 'Waiting for input...';
+            previewImg.style.display = 'none';
+        }
+
+        async function getPrediction() {
+            const selectedModel = document.querySelector('input[name="model_choice"]:checked').value;
+            outputDiv.innerText = 'Processing...';
+            previewImg.style.display = 'none';
+            let endpoint = '', options = {}, isObjectDetector = false;
+
+            if (selectedModel === 'moisture') {
+                endpoint = '/predict/moisture';
+                const inputData = {
+                    Month: parseInt(document.getElementById('month').value, 10), Day: parseInt(document.getElementById('day').value, 10),
+                    avg_temp: parseFloat(document.getElementById('avg_temp').value), avg_wind: parseFloat(document.getElementById('avg_wind').value),
+                    avg_ws: parseFloat(document.getElementById('avg_ws').value), avg_sol_rad: parseFloat(document.getElementById('avg_sol_rad').value),
+                    s_1_t: parseFloat(document.getElementById('s_1_t').value), s_2_t: parseFloat(document.getElementById('s_2_t').value),
+                    s_3_t: parseFloat(document.getElementById('s_3_t').value), s_4_t: parseFloat(document.getElementById('s_4_t').value),
+                };
+                if (Object.values(inputData).some(v => isNaN(v))) { outputDiv.innerText = 'Please fill all fields.'; return; }
+                options = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(inputData) };
+            } else {
+                const file = document.getElementById('fileInput').files[0];
+                if (!file) { outputDiv.innerText = 'Please select an image file.'; return; }
+                const formData = new FormData();
+                formData.append('file', file);
+                if (selectedModel === 'disease') endpoint = '/predict/disease';
+                else if (selectedModel === 'soil') endpoint = '/predict/soil';
+                else if (selectedModel === 'weed') { endpoint = '/predict/weed'; isObjectDetector = true; }
+                options = { method: 'POST', body: formData };
+            }
+
+            try {
+                const response = await fetch(endpoint, options);
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                const data = await response.json();
+                outputDiv.innerHTML = '';
+                if (data.predicted_moisture !== undefined) {
+                    outputDiv.innerHTML = `<h2 class="text-xl font-semibold">Predicted Moisture: <span class="text-blue-600">${data.predicted_moisture.toFixed(3)}</span></h2>`;
+                } else if (isObjectDetector) {
+                    previewImg.src = data.annotated_image;
+                    previewImg.style.display = 'block';
+                    outputDiv.innerHTML = `<p class="text-green-600 font-semibold">Weed detection complete!</p>`;
+                } else {
+                    let predictionText = data.prediction.replace(/_/g, ' ');
+                    outputDiv.innerHTML = `<h2 class="text-xl font-semibold">Prediction: <span class="text-green-600">${predictionText}</span></h2><p class="text-gray-600">Confidence: ${(data.confidence * 100).toFixed(2)}%</p>`;
+                    const file = document.getElementById('fileInput').files[0];
+                    if(file) previewImg.src = URL.createObjectURL(file);
+                    previewImg.style.display = 'block';
+                }
+            } catch (error) { outputDiv.innerText = `Error: ${error.message}`; }
+        }
+
+        async function startWebcam() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.play();
+                startButton.disabled = true; stopButton.disabled = false;
+                outputDiv.innerText = "Connecting to server...";
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                websocket = new WebSocket(`${protocol}//${window.location.host}/ws/realtime`);
+                websocket.onopen = () => { outputDiv.innerText = "Connection successful. Point camera at a target."; intervalId = setInterval(sendFrame, 150); };
+                websocket.onmessage = (event) => { const img = new Image(); img.src = event.data; img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+                websocket.onerror = () => { outputDiv.innerText = "Connection error."; stopWebcam(); };
+            } catch (err) { outputDiv.innerText = "Could not access webcam."; }
+        }
+
+        function sendFrame() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = video.videoWidth; tempCanvas.height = video.videoHeight;
+                tempCanvas.getContext('2d').drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+                const imageData = tempCanvas.toDataURL('image/jpeg', 0.8);
+                websocket.send(JSON.stringify({ model_type: document.querySelector('input[name="model_choice"]:checked').value, image_str: imageData }));
+            }
+        }
+
+        function stopWebcam() {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            if (websocket) websocket.close();
+            if (intervalId) clearInterval(intervalId);
+            startButton.disabled = false; stopButton.disabled = true;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        toggleUI();
+    </script>
+</body>
+</html>

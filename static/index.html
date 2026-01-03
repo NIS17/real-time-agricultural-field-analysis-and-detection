@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crop Disease Classifier</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        #output { margin-top: 20px; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Upload a Leaf Image to Classify</h1>
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="uploadImage()">Classify Image</button>
+    <div id="output"></div>
+    <img id="preview" style="max-width: 300px; max-height: 300px; margin-top: 20px; display: none;">
+
+    <script>
+        async function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const outputDiv = document.getElementById('output');
+            const previewImg = document.getElementById('preview');
+
+            if (!file) {
+                outputDiv.innerText = 'Please select a file first.';
+                return;
+            }
+
+            outputDiv.innerText = 'Classifying...';
+
+            // Display the image preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Create a FormData object to send the image
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // Make a POST request to your FastAPI backend
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                outputDiv.innerHTML = `
+                    <h2>Prediction: ${data.prediction}</h2>
+                    <p>Confidence: ${(data.confidence * 100).toFixed(2)}%</p>
+                `;
+            } catch (error) {
+                outputDiv.innerText = `Error: ${error.message}`;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
