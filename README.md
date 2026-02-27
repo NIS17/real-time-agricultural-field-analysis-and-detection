@@ -52,8 +52,8 @@ Real-Time Detection| OpenCV + WebSocket Streaming| FastAPI
 
 1️⃣ Clone Repository
 
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/NIS17/real-time-agricultural-field-analysis-and-detection.git
+cd real-time-agricultural-field-analysis-and-detection
 
 2️⃣ Create Virtual Environment
 
@@ -176,3 +176,4 @@ Supports:
 📜 License
 
 This project is for academic and research purposes.
+
